@@ -1,0 +1,143 @@
+---
+- hosts: kanboard
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    kanboard_version: 1.2.21
+  tasks:
+
+  #################################
+  ## setup the user, the domain, the database
+  #################################
+  - name: ensure user exists
+    hsuser.js: name="{{pac}}-{{user}}" password="{{password}}" exists="true"
+  - name: setup domain
+    hsdomain.js: name="{{domain}}" owner="{{pac}}-{{user}}" exists="true"
+  - name: setup database
+    hsdatabase.js: name="{{pac}}_{{user}}" password="{{password}}" instance="postgresql" exists="true"
+
+
+  #################################
+  ## install kanboard
+  #################################
+  - name: install kanboard
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    unarchive:
+      creates: /home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}
+      src: https://github.com/kanboard/kanboard/archive/refs/tags/v{{kanboard_version}}.tar.gz
+      remote_src: yes
+      dest: /home/pacs/{{pac}}/users/{{user}}
+
+  - name: drop htdocs-ssl
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+       path: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+       state: absent
+
+  - name: create symbolic link for htdocs-ssl
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+      state: link
+
+  #################################
+  ## install data directory
+  #################################
+  - name: Check for HDD storage
+    stat:
+      path: /home/storage/{{pac}}/users/{{user}}
+    register: hdd_storage
+  - name: create data directory on storage
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/storage/{{pac}}/users/{{user}}/data"
+      state: directory
+      mode: 0744
+    when: hdd_storage.stat.exists
+
+  - name: create symbolic link for data to storage
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      src: "/home/storage/{{pac}}/users/{{user}}/data"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/data"
+      state: link
+    when: hdd_storage.stat.exists
+
+  - name: create data directory on sdd
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/data"
+      state: directory
+      mode: 0744
+    when: not hdd_storage.stat.exists
+
+  - name: upload apache .htaccess to data directory
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/data/.htaccess" src="templates/htaccess" mode=0644
+
+  #################################
+  ## prepare configuration file
+  #################################
+  - name: copy config file
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    copy:
+      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.default.php"
+      remote_src: yes
+      dest: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+  - name: set db driver
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''DB_DRIVER'','
+      line: "define('DB_DRIVER', 'postgres');"
+  - name: set db name
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''DB_NAME'','
+      line: "define('DB_NAME', '{{pac}}_{{user}}');"
+  - name: set db user name
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''DB_USERNAME'','
+      line: "define('DB_USERNAME', '{{pac}}_{{user}}' );"
+  - name: set database password
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''DB_PASSWORD'','
+      line: "define('DB_PASSWORD', '{{password}}' );"
+
+  - name: set data directory path
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''DATA_DIR'','
+      line: "define('DATA_DIR', '/home/pacs/{{pac}}/users/{{user}}/data' );"
+#  - name: set files directory
+#    become: yes
+#    become_user: "{{pac}}-{{user}}"
+#    lineinfile:
+#      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+#      regexp: '^define\(''FILES_DIR2'','
+#      line: "define('FILES_DIR2', '/home/pacs/{{pac}}/users/{{user}}/data/files/' );"
+
+  #################################
+  ## remove old versions of kanboard
+  #################################
+
+  # TODO bash: for f in kanboard-; if [ -d $f]; then if f not kanboard-version; then rm -Rf f; fi; fi
