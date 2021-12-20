@@ -3,6 +3,7 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3
     kanboard_version: 1.2.21
+    previous_version: 1.2.20
   tasks:
 
   #################################
@@ -27,21 +28,6 @@
       src: https://github.com/kanboard/kanboard/archive/refs/tags/v{{kanboard_version}}.tar.gz
       remote_src: yes
       dest: /home/pacs/{{pac}}/users/{{user}}
-
-  - name: drop htdocs-ssl
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    file:
-       path: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
-       state: absent
-
-  - name: create symbolic link for htdocs-ssl
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    file:
-      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}"
-      dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
-      state: link
 
   #################################
   ## install data directory
@@ -128,16 +114,109 @@
       path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
       regexp: '^define\(''DATA_DIR'','
       line: "define('DATA_DIR', '/home/pacs/{{pac}}/users/{{user}}/data' );"
-#  - name: set files directory
-#    become: yes
-#    become_user: "{{pac}}-{{user}}"
-#    lineinfile:
-#      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
-#      regexp: '^define\(''FILES_DIR2'','
-#      line: "define('FILES_DIR2', '/home/pacs/{{pac}}/users/{{user}}/data/files/' );"
 
   #################################
-  ## remove old versions of kanboard
+  ## configure email
   #################################
+  - name: set mail method
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_TRANSPORT'','
+      line: "define('MAIL_TRANSPORT', 'smtp' );"
 
-  # TODO bash: for f in kanboard-; if [ -d $f]; then if f not kanboard-version; then rm -Rf f; fi; fi
+  - name: set mail from
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_FROM'','
+      line: "define('MAIL_FROM', '{{mail_from}}' );"
+
+  - name: set smtp hostname
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_SMTP_HOSTNAME'','
+      line: "define('MAIL_SMTP_HOSTNAME', '{{mail_hostname}}' );"
+
+  - name: set smtp port
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_SMTP_PORT'','
+      line: "define('MAIL_SMTP_PORT', 587);"
+
+  - name: set smtp encryption
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_SMTP_ENCRYPTION'','
+      line: "define('MAIL_SMTP_ENCRYPTION', 'tls');"
+
+  - name: set smtp username
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_SMTP_USERNAME'','
+      line: "define('MAIL_SMTP_USERNAME', '{{mail_username}}' );"
+
+  - name: set smtp password
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      regexp: '^define\(''MAIL_SMTP_PASSWORD'','
+      line: "define('MAIL_SMTP_PASSWORD', '{{mail_password}}' );"
+
+  #################################
+  ## prepare for SAAS environment
+  #################################
+  - name: deactivate admin user
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    lineinfile:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/app/Schema/Postgres.php"
+      regexp: '^    $pdo->exec\("UPDATE users SET is_active = false'
+      insertafter: '.*ALTER TABLE "projects" ADD COLUMN enable_global_tags.*'
+      line: '    $pdo->exec("UPDATE users SET is_active = false WHERE username=''admin'' and email IS NULL;");'
+    when: SaasEnvironment
+
+  - name: upload activation script
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/saasadmin.php" src="templates/saasadmin.php" mode=0644
+    when: SaasEnvironment
+
+  #################################
+  ## activate website
+  #################################
+  - name: drop htdocs-ssl
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+       path: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+       state: absent
+
+  - name: create symbolic link for htdocs-ssl
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
+      state: link
+
+  #################################
+  ## remove old version of kanboard
+  #################################
+  - name: drop old installation
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+       path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{previous_version}}"
+       state: absent

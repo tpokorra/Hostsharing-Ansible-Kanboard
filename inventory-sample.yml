@@ -1,0 +1,17 @@
+kanboard:
+  hosts:
+    xyz00:
+      ansible_ssh_host: xyz00.hostsharing.net
+      ansible_ssh_user: xyz00
+      pac: xyz00
+      domain: kanboard.example.org
+      user: kb
+      # this password is used both for linux user xyz00-user and db user xyz00_user
+      password: testpassw0rd!?
+      mail_from: noreply@example.org
+      mail_hostname: xyz00.hostsharing.net
+      mail_username: tim00-myemailuser
+      mail_password: topsecret!
+      # this will create a deactivated installation, which can be activated by an activation script
+      SaasEnvironment: False
+      SaasActivationPassword: anothertopsecret!
