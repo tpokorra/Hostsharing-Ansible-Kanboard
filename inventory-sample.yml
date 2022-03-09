@@ -13,4 +13,4 @@ kanboard:
       mail_username: tim00-myemailuser
       mail_password: topsecret!
 
-      kanboard_version: 1.2.21
+      kanboard_version: 1.2.22
