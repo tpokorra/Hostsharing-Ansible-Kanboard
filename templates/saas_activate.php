@@ -22,7 +22,7 @@ try {
   if ($token != 'invalid') {
     $statement = $pdo->prepare("insert into public.password_reset(token, user_id, date_expiration, date_creation, ip, user_agent, is_active)".
       " values(:token, 1, :date_expiration, :date_creation, '127.0.0.1', 'php', true)");
-    $statement->execute(array(':token' => $token, ':date_expiration' => time()+24*60*60, 'date_creation' => time()));
+    $statement->execute(array(':token' => $token, ':date_expiration' => time()+30*60, 'date_creation' => time()));
   }
 }
 catch (Exception $e) {
