@@ -12,6 +12,5 @@ kanboard:
       mail_hostname: xyz00.hostsharing.net
       mail_username: tim00-myemailuser
       mail_password: topsecret!
-      # this will create a deactivated installation, which can be activated by an activation script
-      SaasEnvironment: False
-      SaasActivationPassword: anothertopsecret!
+
+      kanboard_version: 1.2.21

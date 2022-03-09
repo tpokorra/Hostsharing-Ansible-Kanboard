@@ -2,8 +2,6 @@
 - hosts: kanboard
   vars:
     ansible_python_interpreter: /usr/bin/python3
-    kanboard_version: 1.2.21
-    previous_version: 1.2.20
   tasks:
 
   #################################
@@ -20,14 +18,28 @@
   #################################
   ## install kanboard
   #################################
+  - name: create kanboard directory
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard"
+      state: directory
+      mode: 0755
+
   - name: install kanboard
     become: yes
     become_user: "{{pac}}-{{user}}"
     unarchive:
-      creates: /home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}
+      creates: /home/pacs/{{pac}}/users/{{user}}/kanboard/config.default.php
       src: https://github.com/kanboard/kanboard/archive/refs/tags/v{{kanboard_version}}.tar.gz
       remote_src: yes
-      dest: /home/pacs/{{pac}}/users/{{user}}
+      dest: /home/pacs/{{pac}}/users/{{user}}/kanboard
+      extra_opts: [--strip-components=1]
+
+  - name: upload apache .htaccess to domain directory for API access
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/.htaccess" src="templates/htaccess_domain" mode=0644
 
   #################################
   ## install data directory
@@ -75,35 +87,35 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     copy:
-      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.default.php"
+      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.default.php"
       remote_src: yes
-      dest: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      dest: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
   - name: set db driver
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''DB_DRIVER'','
       line: "define('DB_DRIVER', 'postgres');"
   - name: set db name
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''DB_NAME'','
       line: "define('DB_NAME', '{{pac}}_{{user}}');"
   - name: set db user name
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''DB_USERNAME'','
       line: "define('DB_USERNAME', '{{pac}}_{{user}}' );"
   - name: set database password
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''DB_PASSWORD'','
       line: "define('DB_PASSWORD', '{{password}}' );"
 
@@ -111,7 +123,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''DATA_DIR'','
       line: "define('DATA_DIR', '/home/pacs/{{pac}}/users/{{user}}/data' );"
 
@@ -122,7 +134,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_TRANSPORT'','
       line: "define('MAIL_TRANSPORT', 'smtp' );"
 
@@ -130,7 +142,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_FROM'','
       line: "define('MAIL_FROM', '{{mail_from}}' );"
 
@@ -138,7 +150,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_SMTP_HOSTNAME'','
       line: "define('MAIL_SMTP_HOSTNAME', '{{mail_hostname}}' );"
 
@@ -146,7 +158,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_SMTP_PORT'','
       line: "define('MAIL_SMTP_PORT', 587);"
 
@@ -154,7 +166,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_SMTP_ENCRYPTION'','
       line: "define('MAIL_SMTP_ENCRYPTION', 'tls');"
 
@@ -162,7 +174,7 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_SMTP_USERNAME'','
       line: "define('MAIL_SMTP_USERNAME', '{{mail_username}}' );"
 
@@ -170,32 +182,13 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/config.php"
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php"
       regexp: '^define\(''MAIL_SMTP_PASSWORD'','
       line: "define('MAIL_SMTP_PASSWORD', '{{mail_password}}' );"
 
-  #################################
-  ## prepare for SAAS environment
-  #################################
-  - name: deactivate admin user
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    lineinfile:
-      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/app/Schema/Postgres.php"
-      regexp: '^    $pdo->exec\("UPDATE users SET is_active = false'
-      insertafter: '.*ALTER TABLE "projects" ADD COLUMN enable_global_tags.*'
-      line: '    $pdo->exec("UPDATE users SET is_active = false WHERE username=''admin'' and email IS NULL;");'
-    when: SaasEnvironment
-
-  - name: upload activation script
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    template: dest="/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}/saasadmin.php" src="templates/saasadmin.php" mode=0644
-    when: SaasEnvironment
-
-  #################################
+  ######################################################
   ## activate website
-  #################################
+  ######################################################
   - name: drop htdocs-ssl
     become: yes
     become_user: "{{pac}}-{{user}}"
@@ -207,21 +200,6 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     file:
-      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{kanboard_version}}"
+      src: "/home/pacs/{{pac}}/users/{{user}}/kanboard"
       dest: "/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/htdocs-ssl"
       state: link
-
-  - name: upload apache .htaccess to domain directory for API access
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    template: dest="/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/.htaccess" src="templates/htaccess_domain" mode=0644
-
-  #################################
-  ## remove old version of kanboard
-  #################################
-  - name: drop old installation
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    file:
-       path: "/home/pacs/{{pac}}/users/{{user}}/kanboard-{{previous_version}}"
-       state: absent

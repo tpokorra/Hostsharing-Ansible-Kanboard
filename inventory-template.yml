@@ -1,0 +1,15 @@
+kanboard:
+  hosts:
+      {{pac}}:
+        ansible_ssh_host: {{pac}}.hostsharing.net
+        ansible_ssh_user: {{pac}}
+        pac: {{pac}}
+        domain: {{domain}}
+        user: {{username}}
+        password: {{password}}
+        mail_from: {{smtp_from}}
+        mail_hostname: {{smtp_host}}
+        mail_username: {{smtp_user}}
+        mail_password: {{smtp_pwd}}
+        SaasActivationPassword: {{SaasActivationPassword}}
+        kanboard_version: 1.2.21
