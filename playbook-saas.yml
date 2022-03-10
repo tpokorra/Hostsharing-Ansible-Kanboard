@@ -19,19 +19,16 @@
     become_user: "{{pac}}-{{user}}"
     template: dest="/home/pacs/{{pac}}/users/{{user}}/saas_deactivate.php" src="templates/saas_deactivate.php" mode=0644
 
+  - name: upload activation script
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    template: dest="/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/subs-ssl/www/saas_activate.php" src="templates/saas_activate.php" mode=0644
+
   - name: run deactivation script
     become: yes
     become_user: "{{pac}}-{{user}}"
     shell: 'php /home/pacs/{{pac}}/users/{{user}}/saas_deactivate.php || exit -1'
     args:
       chdir: '/home/pacs/{{pac}}/users/{{user}}/kanboard'
+    when: SaasInstanceStatus <> 'active'
 
-  - name: drop deactivation script
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    file: path="/home/pacs/{{pac}}/users/{{user}}/saas_deactivate.php" state=absent
-
-  - name: upload activation script
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    template: dest="/home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/subs-ssl/www/saas_activate.php" src="templates/saas_activate.php" mode=0644
