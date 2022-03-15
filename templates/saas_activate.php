@@ -8,7 +8,7 @@ function Get($index, $defaultValue) {
 
 # check SaasActivationPassword
 if (Get('SaasActivationPassword', 'invalid') != '{{SaasActivationPassword}}') {
-  echo "invalid SaasActivationPassword";
+  echo '{"success": false, "msg": "invalid SaasActivationPassword"}';
   exit(1);
 }
 
@@ -18,7 +18,7 @@ try {
   $statement->execute(array(':email' => Get('UserEmailAddress', 'invalid@solidcharity.com'), ':username' => 'admin'));
 
   # initiate password reset, without sending the email
-  $token = Get('ExpireToken', 'invalid');
+  $token = Get('PasswordResetToken', 'invalid');
   if ($token != 'invalid') {
     $statement = $pdo->prepare("update public.password_reset set is_active = false where is_active = true");
     $statement->execute();
@@ -29,8 +29,9 @@ try {
 }
 catch (Exception $e) {
     // echo 'Exception caught: ',  $e->getMessage(), "\n";
-    echo "error happened";
+    echo '{"success": false, "msg": "error happened"}';
     exit(1);
 }
 
+echo '{"success": true}';
 ?>
