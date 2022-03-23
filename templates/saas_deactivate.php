@@ -6,10 +6,20 @@ function Get($index, $defaultValue) {
     return isset($_GET[$index]) ? $_GET[$index] : $defaultValue;
 }
 
-# check SaasActivationPassword
-if (Get('SaasActivationPassword', 'invalid') != '{{SaasActivationPassword}}') {
-  echo '{"success": false, "msg": "invalid SaasActivationPassword"}';
-  exit(1);
+function is_run_from_cli() {
+    if( defined('STDIN') )
+    {
+        return true;
+    }
+    return false;
+}
+
+if (!is_run_from_cli()) {
+    # check SaasActivationPassword
+    if (Get('SaasActivationPassword', 'invalid') != '{{SaasActivationPassword}}') {
+        echo '{"success": false, "msg": "invalid SaasActivationPassword"}';
+        exit(1);
+    }
 }
 
 try {
