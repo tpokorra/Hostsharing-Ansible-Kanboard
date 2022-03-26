@@ -43,7 +43,7 @@
   - name: run deactivation script
     become: yes
     become_user: "{{pac}}-{{user}}"
-    shell: 'php /home/pacs/{{pac}}/users/{{user}}/saas_deactivate.php || exit -1'
+    shell: 'php /home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/subs-ssl/saas/saas_deactivate.php || exit -1'
     args:
       chdir: '/home/pacs/{{pac}}/users/{{user}}/kanboard'
     when: SaasInstanceStatus != 'ASSIGNED'
