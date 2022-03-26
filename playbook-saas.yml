@@ -7,13 +7,6 @@
   #################################
   ## prepare for SAAS environment
   #################################
-  - name: force creation of database
-    become: yes
-    become_user: "{{pac}}-{{user}}"
-    shell: './cli db:migrate || exit -1'
-    args:
-      chdir: '/home/pacs/{{pac}}/users/{{user}}/kanboard'
-
   - name: create saas directory
     become: yes
     become_user: "{{pac}}-{{user}}"
@@ -44,7 +37,5 @@
     become: yes
     become_user: "{{pac}}-{{user}}"
     shell: 'php /home/pacs/{{pac}}/users/{{user}}/doms/{{domain}}/subs-ssl/saas/saas_deactivate.php || exit -1'
-    args:
-      chdir: '/home/pacs/{{pac}}/users/{{user}}/kanboard'
     when: SaasInstanceStatus != 'ASSIGNED'
 
