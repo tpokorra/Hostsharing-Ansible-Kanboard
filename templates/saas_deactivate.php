@@ -27,10 +27,13 @@ try {
     # deactivate all users
     $statement = $pdo->prepare("update public.users set is_active=false");
     $statement->execute();
-  }
-  catch (Exception $e) {
-      // echo 'Exception caught: ',  $e->getMessage(), "\n";
-      echo "error happened";
-      exit(1);
-  }
+}
+catch (Exception $e) {
+    // echo 'Exception caught: ',  $e->getMessage(), "\n";
+    echo '{"success": false, "msg": "error happened"}';
+    exit(1);
+}
+
+echo '{"success": true}';
+
 ?>
