@@ -12,10 +12,16 @@ if (Get('SaasActivationPassword', 'invalid') != '{{SaasActivationPassword}}') {
   exit(1);
 }
 
+$USER_EMAIL_ADDRESS = Get('UserEmailAddress', '');
+if (empty($USER_EMAIL_ADDRESS)) {
+  echo '{"success": false, "msg": "missing email address"}';
+  exit(1);
+}
+
 try {
   $pdo = new PDO('pgsql:host=localhost;dbname='.DB_NAME, DB_USERNAME, DB_PASSWORD);
   $statement = $pdo->prepare("update public.users set email=:email, is_active=true, password='Invalid' where username=:username and is_active=false");
-  $statement->execute(array(':email' => Get('UserEmailAddress', 'invalid@solidcharity.com'), ':username' => 'admin'));
+  $statement->execute(array(':email' => $USER_EMAIL_ADDRESS, ':username' => 'admin'));
 
   # initiate password reset, without sending the email
   $token = Get('PasswordResetToken', 'invalid');
