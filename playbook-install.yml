@@ -68,7 +68,7 @@
       state: link
     when: hdd_storage.stat.exists
 
-  - name: create data directory on sdd
+  - name: create data directory on ssd
     become: yes
     become_user: "{{pac}}-{{user}}"
     file:
