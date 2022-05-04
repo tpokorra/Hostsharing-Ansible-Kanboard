@@ -20,18 +20,10 @@ if (empty($USER_EMAIL_ADDRESS)) {
 
 try {
   $pdo = new PDO('pgsql:host=localhost;dbname='.DB_NAME, DB_USERNAME, DB_PASSWORD);
+
+  # activate the admin and set the email address
   $statement = $pdo->prepare("update public.users set email=:email, is_active=true, password='Invalid' where username=:username and is_active=false");
   $statement->execute(array(':email' => $USER_EMAIL_ADDRESS, ':username' => 'admin'));
-
-  # initiate password reset, without sending the email
-  $token = Get('PasswordResetToken', 'invalid');
-  if ($token != 'invalid') {
-    $statement = $pdo->prepare("update public.password_reset set is_active = false where is_active = true");
-    $statement->execute();
-    $statement = $pdo->prepare("insert into public.password_reset(token, user_id, date_expiration, date_creation, ip, user_agent, is_active)".
-      " values(:token, 1, :date_expiration, :date_creation, '127.0.0.1', 'php', true)");
-    $statement->execute(array(':token' => $token, ':date_expiration' => time()+30*60, 'date_creation' => time()));
-  }
 }
 catch (Exception $e) {
     // echo 'Exception caught: ',  $e->getMessage(), "\n";
