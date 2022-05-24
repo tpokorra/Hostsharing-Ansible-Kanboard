@@ -1,7 +1,5 @@
 <?php
 
-include "/home/pacs/{{pac}}/users/{{user}}/kanboard/config.php";
-
 function Get($index, $defaultValue) {
   return isset($_GET[$index]) ? $_GET[$index] : $defaultValue;
 }
@@ -19,7 +17,8 @@ if (empty($USER_EMAIL_ADDRESS)) {
 }
 
 try {
-  $pdo = new PDO('pgsql:host=localhost;dbname='.DB_NAME, DB_USERNAME, DB_PASSWORD);
+  $pdo = new PDO('pgsql:host=localhost;dbname={{pac}}_{{user}}', '{{pac}}_{{user}}', '{{password}}');
+  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
   # activate the admin and set the email address
   $statement = $pdo->prepare("update public.users set email=:email, is_active=true, password='Invalid' where username=:username and is_active=false");
