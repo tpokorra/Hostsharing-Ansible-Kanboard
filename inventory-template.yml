@@ -7,6 +7,9 @@ kanboard:
         domain: {{domain}}
         user: {{username}}
         password: {{password}}
+
+        dbms: {{dbms_type}}
+
         mail_from: {{smtp_from}}
         mail_hostname: {{smtp_host}}
         mail_username: {{smtp_user}}

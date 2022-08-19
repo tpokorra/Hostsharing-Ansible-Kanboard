@@ -8,6 +8,10 @@ kanboard:
       user: kb
       # this password is used both for linux user xyz00-user and db user xyz00_user
       password: testpassw0rd!?
+
+      # database: postgresql or mysql
+      dbms: postgresql
+
       mail_from: noreply@example.org
       mail_hostname: xyz00.hostsharing.net
       mail_username: tim00-myemailuser

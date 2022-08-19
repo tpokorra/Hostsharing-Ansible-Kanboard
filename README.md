@@ -1,6 +1,7 @@
 Hostsharing-Ansible-Kanboard
 ============================
-This Ansible playbook will install the latest Kanboard release on a server from www.hostsharing.net.
+
+This Ansible playbook will install the latest [Kanboard](https://kanboard.org/) release on a server from www.hostsharing.net.
 
 To use these modules we have to create a file named ".hsadmin.properties" in the home directory of the package admins. In it we have to insert the packagename and password of the package admin. 
 
@@ -33,6 +34,8 @@ The option -i can be used to read this inventory file instead of the /etc/ansibl
 Now we can reach our site via:
 
     https://kanboard.example.org
+
+Login with user admin and password admin
 
 --- Open Source Hosting ---
  https://www.hostsharing.net
