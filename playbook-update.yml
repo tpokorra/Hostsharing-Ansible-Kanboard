@@ -1,0 +1,49 @@
+---
+- hosts: kanboard
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+
+  - name: remove old kanboard directory
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      state: absent
+      path: /home/pacs/{{pac}}/users/{{user}}/kanboard.old
+
+  - name: move kanboard directory to backup
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    command: mv /home/pacs/{{pac}}/users/{{user}}/kanboard /home/pacs/{{pac}}/users/{{user}}/kanboard.old
+
+  - name: create kanboard directory
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    file:
+      path: "/home/pacs/{{pac}}/users/{{user}}/kanboard"
+      state: directory
+      mode: 0755
+
+  - name: download kanboard
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    unarchive:
+      creates: /home/pacs/{{pac}}/users/{{user}}/kanboard/config.default.php
+      src: https://github.com/kanboard/kanboard/archive/refs/tags/v{{kanboard_version}}.tar.gz
+      remote_src: yes
+      dest: /home/pacs/{{pac}}/users/{{user}}/kanboard
+      extra_opts: [--strip-components=1]
+
+  - name: restore the config file
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    command: cp /home/pacs/{{pac}}/users/{{user}}/kanboard.old/config.php /home/pacs/{{pac}}/users/{{user}}/kanboard
+
+  - name: run migrations
+    become: yes
+    become_user: "{{pac}}-{{user}}"
+    shell: |
+      ./cli db:migrate || exit -1
+    args:
+      executable: /bin/bash
+      chdir: "/home/pacs/{{pac}}/users/{{user}}/kanboard"
