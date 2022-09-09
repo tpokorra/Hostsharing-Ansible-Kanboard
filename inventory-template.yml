@@ -16,4 +16,4 @@ kanboard:
         mail_password: {{smtp_pwd}}
         SaasActivationPassword: {{SaasActivationPassword}}
         SaasInstanceStatus: {{SaasInstanceStatus}}
-        kanboard_version: 1.2.22
+        kanboard_version: 1.2.23
