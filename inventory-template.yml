@@ -18,4 +18,4 @@ kanboard:
         SaasInstanceStatus: {{SaasInstanceStatus}}
 
         # see https://github.com/kanboard/kanboard/releases
-        kanboard_version: 1.2.27
+        kanboard_version: 1.2.28
